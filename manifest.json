@@ -2,7 +2,7 @@
   "name": "Отслеживание геопозиции",
   "short_name": "ГеоОСМ",
   "description": "Приложение для отслеживания геопозиции на карте OpenStreetMap",
-  "start_url": "/",
+  "start_url": "/geoposition",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
