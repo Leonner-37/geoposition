@@ -1,11 +1,11 @@
 const CACHE_NAME = 'geo-osm-v1';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/style.css',
-  '/main.js',
-  '/lib/leaflet.css',
-  '/lib/leaflet.js'
+  './',
+  './index.html',
+  './style.css',
+  './main.js',
+  './lib/leaflet.css',
+  './lib/leaflet.js'
 ];
 
 self.addEventListener('install', (event) => {
