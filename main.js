@@ -1,7 +1,8 @@
 // Инициализация карты
 let map;
-let currentMarker = null;
-let currentCircle = null;
+let myMarker = null
+let myMarkerCircle = null;
+let teammateMarkers = [];
 let watchId = null;
 let isTracking = false;
 
@@ -62,11 +63,63 @@ function updateStatus(message, isError = false) {
 // Добавление маркера на карту
 function addMarker(latitude, longitude, accuracy) {
     // Удаляем старые маркеры и круги
-    if (currentMarker) {
-        map.removeLayer(currentMarker);
+    if (myMarker) {
+        map.removeLayer(myMarker);
     }
-    if (currentCircle) {
-        map.removeLayer(currentCircle);
+    if (myMarkerCircle) {
+        map.removeLayer(myMarkerCircle);
+    }
+
+    // Создаем кастомную иконку для маркера
+    const customIcon = L.divIcon({
+        html: `<div style="
+                    width: 24px;
+                    height: 24px;
+                    background-color: rgba(255,0,0,0.77);
+                    border: 3px solid white;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    /*animation: pulse 1.5s infinite;*/
+                "></div>`,
+        className: 'custom-marker',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+    });
+
+    // Добавляем маркер
+    myMarker = L.marker([latitude, longitude], { icon: customIcon }).addTo(map);
+
+    // Добавляем круг точности если больше 10 метров
+    if (accuracy && accuracy > 10) {
+        myMarkerCircle = L.circle([latitude, longitude], {
+            radius: accuracy,
+            color: '#4CAF50',
+            fillColor: '#4CAF50',
+            fillOpacity: 0.2,
+            weight: 2
+        }).addTo(map);
+    }
+
+    // Добавляем всплывающее окно
+    // currentMarker.bindPopup(`
+    //             <b>📍 Ваше местоположение</b><br>
+    //             Широта: ${latitude.toFixed(6)}<br>
+    //             Долгота: ${longitude.toFixed(6)}<br>
+    //             Точность: ${accuracy ? Math.round(accuracy) + ' м' : 'неизвестно'}
+    //         `).openPopup();
+
+    // Центрируем карту на позиции
+    map.setView([latitude, longitude], Math.max(15, Math.min(18, 18 - Math.log10(accuracy || 100))));
+}
+
+// Добавление маркера сокомандников на карту
+function addTeammateMarkers(teammates) {
+    console.log("Teammates:", teammates);
+    // Удаляем старые маркеры
+    if (teammateMarkers.length > 0) {
+        teammateMarkers.forEach((marker) => {
+            map.removeLayer(marker);
+        });
     }
 
     // Создаем кастомную иконку для маркера
@@ -78,37 +131,61 @@ function addMarker(latitude, longitude, accuracy) {
                     border: 3px solid white;
                     border-radius: 50%;
                     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-                    animation: pulse 1.5s infinite;
+                    /*animation: pulse 1.5s infinite;*/
                 "></div>`,
         className: 'custom-marker',
         iconSize: [24, 24],
         iconAnchor: [12, 12]
     });
 
-    // Добавляем маркер
-    currentMarker = L.marker([latitude, longitude], { icon: customIcon }).addTo(map);
+    // Добавляем маркеры сокомандников на карту
+    teammates.forEach((teammate) => {
+        const teamLogin = `${teammate.team} - ${teammate.login}`;
+        console.log(teamLogin);
+        var markerOptions = {
+            title: teamLogin, // The text to display on hover
+            clickable: true,
+            draggable: false,
+            icon: customIcon
+        };
+        const newTeammateMarker = L.marker([teammate.latitude, teammate.longitude], markerOptions).addTo(map);
+        newTeammateMarker.bindTooltip(teamLogin, {
+            permanent: true,   // Текст виден всегда
+            direction: 'top',  // Отображать над маркером
+            offset: [0, 0],  // Смещение, чтобы текст не перекрывал иконку
+            className: 'my-tooltip-style' // Свой класс для CSS (необязательно)
+        });
+        // teammateMarkers.push( L.marker([teammate.latitude, teammate.longitude], { icon: customIcon }).addTo(map).bindPopup(`${teammate.team} - ${teammate.login}`) );
+        teammateMarkers.push(newTeammateMarker);
+    });
+}
 
-    // Добавляем круг точности если больше 10 метров
-    if (accuracy && accuracy > 10) {
-        currentCircle = L.circle([latitude, longitude], {
-            radius: accuracy,
-            color: '#4CAF50',
-            fillColor: '#4CAF50',
-            fillOpacity: 0.2,
-            weight: 2
-        }).addTo(map);
+async function sendPosition(latitude, longitude, accuracy, timestamp) {
+    const postData = {
+        latitude,
+        longitude,
+        accuracy,
+        timestamp,
+        login: "Baikal",
+        team: "Slonopotamyi",
+        grade: "Strelok"
+    };
+
+    const response = await fetch('http://localhost:3000/api/v1/test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData)
+    });
+
+    console.log(response);
+
+    if (!response.ok || response.status !== 200) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    } else {
+        return await response.json();
     }
-
-    // Добавляем всплывающее окно
-    currentMarker.bindPopup(`
-                <b>📍 Ваше местоположение</b><br>
-                Широта: ${latitude.toFixed(6)}<br>
-                Долгота: ${longitude.toFixed(6)}<br>
-                Точность: ${accuracy ? Math.round(accuracy) + ' м' : 'неизвестно'}
-            `).openPopup();
-
-    // Центрируем карту на позиции
-    map.setView([latitude, longitude], Math.max(15, Math.min(18, 18 - Math.log10(accuracy || 100))));
 }
 
 // Обработка успешного получения позиции
@@ -119,9 +196,15 @@ function handleSuccess(position) {
     const timestamp = position.timestamp;
 
     updateInfoPanel(latitude, longitude, accuracy, timestamp);
-    addMarker(latitude, longitude, accuracy);
+    // addMarker(latitude, longitude, accuracy);
     updateStatus(`✅ Позиция получена (точность: ${Math.round(accuracy)} м)`);
     document.getElementById('statusText').textContent = 'Получено';
+
+    sendPosition(latitude, longitude, accuracy, timestamp)
+        .then(data => {
+                addTeammateMarkers(data.teammates);
+                addMarker(latitude, longitude, accuracy);
+        });
 }
 
 // Обработка ошибок геолокации

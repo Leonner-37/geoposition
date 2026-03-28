@@ -173,3 +173,18 @@ button {
         opacity: 0;
     }
 }
+
+/* Убираем фон и границы у Tooltip */
+.leaflet-tooltip-top.my-tooltip-style {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: rgba(0, 0, 0, 0.59);      /* Цвет текста */
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Убираем маленький хвостик (стрелочку) под текстом */
+.leaflet-tooltip-top.my-tooltip-style:before {
+    border-top-color: transparent;
+}
