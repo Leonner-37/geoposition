@@ -196,14 +196,14 @@ function handleSuccess(position) {
     const timestamp = position.timestamp;
 
     updateInfoPanel(latitude, longitude, accuracy, timestamp);
-    // addMarker(latitude, longitude, accuracy);
+    addMarker(latitude, longitude, accuracy);
     updateStatus(`✅ Позиция получена (точность: ${Math.round(accuracy)} м)`);
     document.getElementById('statusText').textContent = 'Получено';
 
     sendPosition(latitude, longitude, accuracy, timestamp)
         .then(data => {
                 addTeammateMarkers(data.teammates);
-                addMarker(latitude, longitude, accuracy);
+                // addMarker(latitude, longitude, accuracy);
         });
 }
 
