@@ -140,19 +140,14 @@ function addTeammateMarkers(teammates) {
 
     // Добавляем маркеры сокомандников на карту
     teammates.forEach((teammate) => {
-        const teamLogin = `${teammate.team} - ${teammate.login}`;
-        console.log(teamLogin);
-        var markerOptions = {
-            title: teamLogin, // The text to display on hover
-            clickable: true,
-            draggable: false,
-            icon: customIcon
-        };
-        const newTeammateMarker = L.marker([teammate.latitude, teammate.longitude], markerOptions).addTo(map);
-        newTeammateMarker.bindTooltip(teamLogin, {
+        // const teamAndLogin = `${teammate.team} - ${teammate.login}`;
+        const teamAndLogin = `${teammate.login}`;
+
+        const newTeammateMarker = L.marker([teammate.latitude, teammate.longitude], {icon: customIcon}).addTo(map);
+        newTeammateMarker.bindTooltip(teamAndLogin, {
             permanent: true,   // Текст виден всегда
             direction: 'top',  // Отображать над маркером
-            offset: [0, 0],  // Смещение, чтобы текст не перекрывал иконку
+            offset: [-4, 0],  // Смещение, чтобы текст не перекрывал иконку
             className: 'my-tooltip-style' // Свой класс для CSS (необязательно)
         });
         // teammateMarkers.push( L.marker([teammate.latitude, teammate.longitude], { icon: customIcon }).addTo(map).bindPopup(`${teammate.team} - ${teammate.login}`) );

@@ -429,7 +429,8 @@ svg.leaflet-image-layer.leaflet-interactive path {
 	text-decoration: underline;
 	}
 .leaflet-attribution-flag {
-	display: inline !important;
+	/*display: inline !important;*/
+	display: none;
 	vertical-align: baseline !important;
 	width: 1em;
 	height: 0.6669em;
